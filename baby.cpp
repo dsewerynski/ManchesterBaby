@@ -2,8 +2,6 @@
 
 using namespace std;
 
-int countt = 0;
-
 int controlInstruction = 0;
 char store[32][32];
 bool halted = false;
@@ -24,8 +22,7 @@ int main() {
 		decode();
 		execute();
 		//display_everything();
-		countt++;
-	} while (countt < 9);
+	} while (!halted);
 
 	return 0;
 }
@@ -36,7 +33,7 @@ void fetch(){
 	}
 }
 
-int decode(){
+void decode(){
 	//Store the bits, reverse the order.
 	string functionNumber = {presentInstruction[15], presentInstruction[14], presentInstruction[13]};
 	currentFunction = stoi(functionNumber, nullptr, 2);
@@ -44,33 +41,28 @@ int decode(){
 	//Store the bits, reverse the order.
 	string operandNumber = {presentInstruction[4], presentInstruction[3], presentInstruction[2], presentInstruction[1] , presentInstruction[0]};
 	currentOperand = stoi(operandNumber, nullptr, 2);
-
-	return 0;
 }
 
 void execute() {
 	switch(currentFunction) {
-		case 1:
+		case 1: // JMP
 
 			break;
-		case 2:
+		case 2: // JRP
 
 			break;
-		case 3:
+		case 3: // LDN
 
 			break;
-		case 4:
-
-			break;
-			break;
+		case 4: // STO
 		case 5:
 
 			break;
-		case 6:
+		case 6: // CMP
 
 			break;
-		case 7:
-
+		case 7: // STP
+			halted = true;
 			break;
 	}
 
