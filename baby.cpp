@@ -11,19 +11,21 @@ bool halted = false;
 char presentInstruction[32];
 char accumulator[32];
 
+int currentFunction = 0;
+int currentOperand = 0;
+
 
 int main() {
 	loadProgram();
+
 	do {	
 		increment_CI();
 		fetch();
 		decode();
-
-		//break;
-		//execute();
+		execute();
 		//display_everything();
 		countt++;
-	} while (countt < 10);
+	} while (countt < 9);
 
 	return 0;
 }
@@ -34,26 +36,47 @@ void fetch(){
 	}
 }
 
-void decode(){
-	char lineNumber[5];
-	for(int  i = 0; i < 5; i++) {
-		lineNumber[i] = presentInstruction[i];
-	}
+int decode(){
+	//Store the bits, reverse the order.
+	string functionNumber = {presentInstruction[15], presentInstruction[14], presentInstruction[13]};
+	currentFunction = stoi(functionNumber, nullptr, 2);
 
-	string functionNumber = {presentInstruction[13], presentInstruction[14], presentInstruction[15]};
+	//Store the bits, reverse the order.
+	string operandNumber = {presentInstruction[4], presentInstruction[3], presentInstruction[2], presentInstruction[1] , presentInstruction[0]};
+	currentOperand = stoi(operandNumber, nullptr, 2);
 
-	int currentFunction = stoi(functionNumber, nullptr, 2);
-
-	cout << "Function: " << currentFunction << endl;
+	return 0;
 }
 
 void execute() {
+	switch(currentFunction) {
+		case 1:
+
+			break;
+		case 2:
+
+			break;
+		case 3:
+
+			break;
+		case 4:
+
+			break;
+			break;
+		case 5:
+
+			break;
+		case 6:
+
+			break;
+		case 7:
+
+			break;
+	}
 
 }
 
 int loadProgram() {
-//	ifstream input( "BabyTest1-MC.txt" );
-
 	ifstream file("BabyTest1-MC.txt");
 	if (file.is_open()) {
 	    string line;
@@ -61,7 +84,7 @@ int loadProgram() {
 	    int counter2 = 0;
 
 	    while (getline(file, line)) {
-	        for(int i = 0; i < line.length(); i++) {
+	        for(int i = 0; i < (int)line.length(); i++) {
 	        	if(line[i] == '\r' || line[i] == '\n') continue;
 	        	store[counter1][counter2] = line[i];
 	        	counter2++;
@@ -71,7 +94,7 @@ int loadProgram() {
 	    }
 	    file.close();
 	}
-
+	return 0;
 }
 
 void increment_CI() {
