@@ -45,17 +45,20 @@ void decode(){
 
 void execute() {
 	switch(currentFunction) {
-		case 1: // JMP
+		case 0: // JMP
+			controlInstruction = currentOperand;
+			break;
+		case 1: // JRP
+			controlInstruction = controlInstruction + currentOperand;
+			break;
+		case 2: // LDN
+			
+			break;
+		case 3: // STO
 
 			break;
-		case 2: // JRP
-
-			break;
-		case 3: // LDN
-
-			break;
-		case 4: // STO
-		case 5:
+		case 4: // SUB
+		case 5: //SUB
 
 			break;
 		case 6: // CMP
