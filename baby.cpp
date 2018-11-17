@@ -2,18 +2,36 @@
 
 using namespace std;
 
-int32_t controlInstruction = 0;
-char store[32][32];
+char controlInstruction[33];
+
+char store[32][33];
 bool halted = false;
 
-char presentInstruction[32];
-char accumulator[32];
+char presentInstruction[33];
 
-int32_t currentFunction = 0;
-char currentOperand[5];
+char accumulator[33];
+
+char currentFunction[4];
+
+char currentOperand[6];
 
 
 int main() {
+	//Null terminate char arrays
+	for(int i = 0; i < 32; i++) {
+		store[i][32] = '0';
+	}
+
+	for(int i = 0; i < 32; i++) {
+		controlInstruction[i] = '0';
+	}
+	controlInstruction[32] = '\0';
+
+	presentInstruction[32] = '\0';
+	accumulator[32] = '\0';
+	currentFunction[4] = '\0';
+	currentOperand[5] = '\0';
+
 	loadProgram();
 
 	do {	
@@ -27,77 +45,131 @@ int main() {
 	return 0;
 }
 
-void fetch(){
-	for (int i = 0; i < 32; i++) {
-		presentInstruction[i] = store[controlInstruction][i];
-	}
+char* reverse(char* toReverse) {
+	//Use temp to avoid switching 
+	int numCharacters = string(toReverse).length();
+
+	char* tempChar = new char[numCharacters];
+	copy(toReverse, toReverse+numCharacters, tempChar);
+
+    for (int i=0; i<numCharacters/2; i++)
+    { 
+    	swap(tempChar[i], tempChar[numCharacters-i-1]); 
+    }
+
+    return tempChar;
 }
 
 char* intToBinary(int number) {
+	// Turn the int to a binary string
 	string binary = bitset<32>(number).to_string();
 
-	char newBinary[32];
-	for(int i = 31; i >= 0; i--) {
-		newBinary[i] = binary[i];
-	}
+	// Convert to char array
+    char char_array[33];
+    strcpy(char_array, binary.c_str());
+
+    // Convert to big-endian
+    char* bigEndian = reverse(char_array);
+
+	return bigEndian;
 }
 
 int binaryToInt(char* number) {
-	int numCharacters = sizeof(number);
-    for (int i=0; i<numCharacters/2; i++)
-    { 
-    	swap(number[i], number[numCharacters-i-1]); 
-    }
+	// From big-endian to little-endian for conversion
+	char* littleEndian = reverse(number);
 
-	return stoi(number, nullptr, 2);
+	// Handle negative numbers
+	auto ul = stoul(littleEndian, nullptr, 2);
+    int result = ul;
+
+    return result;
+}
+
+
+int locationToInt(char* operand) {
+	int location = binaryToInt(operand);
+
+	char tempBinary[33];
+	for(int i = 0; i < 32; i++) {
+		tempBinary[i] = store[location][i];
+	}
+	tempBinary[32] = '\0';
+
+	return binaryToInt(tempBinary);
+}
+
+void fetch(){
+	int control = binaryToInt(controlInstruction);
+	for (int i = 0; i < 32; i++) {
+		presentInstruction[i] = store[control][i];
+	}
 }
 
 void decode(){
 	//Store the bits, reverse the order.
-	string functionNumber = {presentInstruction[15], presentInstruction[14], presentInstruction[13]};
-	currentFunction = stoi(functionNumber, nullptr, 2);
-
-	//Store the bits, reverse the order.
-	currentOperand[0] = presentInstruction[0];
-	currentOperand[1] = presentInstruction[1];
-	currentOperand[2] = presentInstruction[2];
-	currentOperand[3] = presentInstruction[3];
-	currentOperand[4] = presentInstruction[4];
-}
-
-int locationToInt(char* operand) {
-	// {}
-	int location = binaryToInt(operand);
-	string binaryNumber = "";
-	for(int i = 31; i >= 0; i--) {
-		binaryNumber += store[location][i];
+	for(int i = 13; i < 16; i++) {
+		currentFunction[i - 13] = presentInstruction[i];
 	}
 
-	return stoi(binaryNumber, nullptr, 2);
+	//Store the bits
+	for(int i = 0; i < 5; i++) {
+		currentOperand[i] = presentInstruction[i];
+	}
 }
 
 void execute() {
-	switch(currentFunction) {
-		case 0: // JMP
-			controlInstruction = locationToInt(currentOperand);
+	int func = binaryToInt(currentFunction);
+	switch(func) {
+		case 0:{ // JMP
+			char* result = intToBinary(locationToInt(currentOperand));
+			
+			for(int i = 0; i < 32; i++){
+				controlInstruction[i] = result[i];
+			}
 			break;
-		case 1: // JRP
-			controlInstruction = controlInstruction + locationToInt(currentOperand);
-			break;
-		case 2: // LDN
-			accumulator = locationToInt(currentOperand) * -1;
-			break;
-		case 3: // STO
+		}
+		case 1: { // JRP
+			char* result = intToBinary(binaryToInt(controlInstruction) + locationToInt(currentOperand));
 
-			//currentOperand = accumulator;
+			for(int i = 0; i < 32; i++){
+				controlInstruction[i] = result[i];
+			}
 			break;
+		}
+		case 2: { // LDN
+			char* result = intToBinary(locationToInt(currentOperand) * -1);
+
+			for(int i = 0; i < 32; i++){
+				accumulator[i] = result[i];
+			}
+
+			break;
+		}
+		case 3: { // STO
+			int location = binaryToInt(currentOperand);
+			
+			for(int i = 0; i < 32; i++) {
+				store[location][i] = accumulator[i];
+			}
+			break;
+		}
 		case 4: // SUB
-		case 5: //SUB
-			//accumulator -= locationToInt(currentOperand);
+		case 5: { //SUB
+			int result = binaryToInt(accumulator) - locationToInt(currentOperand);
+
+			char* binary = intToBinary(result);
+			for(int i = 0; i < 32; i++) {
+				accumulator[i] = binary[i];
+			}
+
 			break;
-		case 6: // CMP
-			if(accumulator < 0){ controlInstruction += 1; }
+		}
+		case 6: { // CMP
+			if(binaryToInt(accumulator) < 0) {
+				increment_CI();
+			}
 			break;
+		}
 		case 7: // STP
 			halted = true;
 			break;
@@ -127,18 +199,34 @@ int loadProgram() {
 }
 
 void increment_CI() {
-	controlInstruction++;
+	char* result = intToBinary(binaryToInt(controlInstruction) + 1);
+
+	for(int i = 0; i < 32; i++){
+		controlInstruction[i] = result[i];
+	}
 }
 
 void display_everything() {
-	cout << "Control Instruction = " << controlInstruction << endl;
+	cout << "Store:" << endl;
+	for (int i = 0; i < 32; i++){
+		if(store[i][0] == '\0') continue;
+
+		for (int j = 0; j < 32; j++){
+			cout << store[i][j];
+		}
+		cout << endl;
+	}
+
+	cout << "Control Instruction = " << controlInstruction << " (" << binaryToInt(controlInstruction) << ")" << endl;
+	
 	cout << "Current Instruction = ";
 	for (int i = 0; i < 32; i++){
 		cout << presentInstruction[i];
 	}
+
 	cout << endl;
-	cout << "Current Function = " << currentFunction << endl;
-	cout << "Current Operand = " << currentOperand << endl;
-	cout << "Accumulator = " << accumulator << endl;
+	cout << "Current Function = " << currentFunction << " (" << binaryToInt(currentFunction) << ")" << endl;
+	cout << "Current Operand = " << currentOperand << " (" << binaryToInt(currentOperand) << ")" << endl;
+	cout << "Accumulator = " << accumulator << " (" << binaryToInt(accumulator) << ")" << endl;
 	cout << endl;
 }
