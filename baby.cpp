@@ -5,7 +5,6 @@ using namespace std;
 char controlInstruction[33];
 
 char store[32][33];
-bool halted = false;
 
 char presentInstruction[33];
 
@@ -14,6 +13,8 @@ char accumulator[33];
 char currentFunction[4];
 
 char currentOperand[6];
+
+bool halted = false;
 
 
 int main() {
