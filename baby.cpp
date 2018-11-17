@@ -82,6 +82,8 @@ int binaryToInt(char* number) {
 	auto ul = stoul(littleEndian, nullptr, 2);
     int result = ul;
 
+    delete littleEndian;
+
     return result;
 }
 
@@ -126,6 +128,8 @@ void execute() {
 			for(int i = 0; i < 32; i++){
 				controlInstruction[i] = result[i];
 			}
+
+			delete result;
 			break;
 		}
 		case 1: { // JRP
@@ -134,6 +138,8 @@ void execute() {
 			for(int i = 0; i < 32; i++){
 				controlInstruction[i] = result[i];
 			}
+
+			delete result;
 			break;
 		}
 		case 2: { // LDN
@@ -143,6 +149,7 @@ void execute() {
 				accumulator[i] = result[i];
 			}
 
+			delete result;
 			break;
 		}
 		case 3: { // STO
@@ -161,6 +168,8 @@ void execute() {
 			for(int i = 0; i < 32; i++) {
 				accumulator[i] = binary[i];
 			}
+
+			delete binary;
 
 			break;
 		}
